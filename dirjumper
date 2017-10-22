@@ -51,7 +51,17 @@ def scan_dir(basedirs):
     scanned_dirs = []
 
     def subdirs(dir):
-        return [os.path.join(dir,f) for f in os.listdir(dir) if os.path.isdir(os.path.join(dir,f))]
+        subd = []
+        try:
+            for f in os.listdir(dir):
+                try:
+                    if os.path.isdir(os.path.join(dir,f)):
+                        subd.append(os.path.join(dir,f))
+                except: # ignore access right problems
+                    None
+        except: # detto
+            None
+        return subd
 
     def scanner(root):
         for subdir in subdirs(root):
@@ -63,7 +73,7 @@ def scan_dir(basedirs):
         scanner(os.path.realpath(basedir))
 
     print_msg("scanned %s, found %d dirs" % (basedirs, len(scanned_dirs)))
-    find_and_update_cache(basedirs[0], scanned_dirs)
+    find_and_update_cache(os.path.realpath('.'), scanned_dirs)
 
 def parse_cache(fp):
     return dict([(x[1].strip(),x[0]) for x in (line.split('++') for line in fp.readlines())])
@@ -103,6 +113,7 @@ def propose_dirs(prefixes):
     res = cache.keys()
     res.extend([val for val in cache.values() if val != '*']) 
     res.sort()
+    res.sort(key=len)
     if prefix == '-':
         return res[0:1]
     return res
