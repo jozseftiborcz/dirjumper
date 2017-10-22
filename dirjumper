@@ -4,6 +4,7 @@ VERSION = "v0.1"
 CACHE_FILE = ".dirjumper"
 
 import sys, os, re
+global IGNORE_HIDDEN_FILES
 
 def print_msg(msg):
     print "%m:"+msg
@@ -48,10 +49,22 @@ def find_and_update_cache(basedir, scanned_dirs):
 
 def scan_dir(basedirs):
     scanned_dirs = []
+
+    def subdirs(dir):
+        return [os.path.join(dir,f) for f in os.listdir(dir) if os.path.isdir(os.path.join(dir,f))]
+
+    def scanner(root):
+        for subdir in subdirs(root):
+            if not os.path.basename(subdir).startswith('.') or IGNORE_HIDDEN_FILES != 'yes':
+                subsubdirs = subdirs(subdir)
+                if len(subsubdirs) == 0:
+                    scanned_dirs.append([os.path.realpath(subdir), '*'])
+                else:
+                    for subsubdir in subsubdirs:
+                        scanner(subsubdir)
+
     for basedir in basedirs:
-        for root, dirnames, _ in os.walk(basedir or '.'):
-            if len(dirnames) == 0:
-                scanned_dirs.append([os.path.realpath(root), '*'])
+        scanner(basedir)
 
     print_msg("scanned %s, found %d dirs" % (basedirs, len(scanned_dirs)))
     find_and_update_cache(basedirs[0], scanned_dirs)
@@ -105,11 +118,11 @@ def process_controll(argv):
         print_help()
     else:
         if argv[0] == 'scan':
-            scan_dir(argv[1:] or ['.'])
+            scan_dir(argv[1:] or [os.path.realpath('.')])
         elif argv[0] == 'init':
             init_cache()
         elif argv[0] == 'discover':
-            discover_caches(argv[1:] or ['.'])
+            discover_caches(argv[1:] or [os.path.realpath('.')])
         elif argv[0] == 'complete':
             complete_basename(argv[1:])
         elif argv[0] == 'add':
@@ -122,6 +135,8 @@ def process_controll(argv):
             print_help()
 
 #print "dirjumper %s" % sys.argv
+
+IGNORE_HIDDEN_FILES = os.environ.get('DIRJUMPER_IGNORE_HIDDEN_FILES') or 'yes'
 
 if len(sys.argv) > 2 and sys.argv[1] == '-':
     process_controll(sys.argv[2:])
