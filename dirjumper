@@ -1,0 +1,130 @@
+#!/usr/bin/python
+
+VERSION = "v0.1"
+CACHE_FILE = ".dirjumper"
+
+import sys, os, re
+
+def print_msg(msg):
+    print "%m:"+msg
+
+def print_err(msg):
+    print "%e:"+msg
+
+def print_help():
+    print_msg("help")
+
+def find_cache(basedir):
+    basedir = os.path.realpath(basedir)
+
+    cache_path = os.path.join(basedir, CACHE_FILE)
+    if os.path.exists(cache_path) and os.path.isfile(cache_path):
+        return cache_path
+    elif basedir != '/':
+        return find_cache(os.path.dirname(basedir))
+    return None
+
+def update_cache(cache_path, data):
+    with open(cache_path, "r") as f:
+        cache = json.load(f)
+
+    with open(cache_path, "w+") as f:
+        cache.update(data)
+        json.dump(cache, f)
+
+def find_and_update_cache(basedir, scanned_dirs):
+    cache_path = find_cache(basedir)
+    if not cache_path:
+        print_err("no %s found in parent path. Initialize cache in a directory with 'cdg - init'" % CACHE_FILE)
+        return
+    print_msg("updating cache %s" % cache_path)
+    with open(cache_path, "r") as f:
+        cache = parse_cache(f)
+    for scanned_dir, alias in scanned_dirs:
+        cache[scanned_dir] = alias
+    with open(cache_path, "w") as f:
+        for cached_dir, alias in cache.items():
+            f.write("%s++%s\n"%(alias, cached_dir))
+
+def scan_dir(basedirs):
+    scanned_dirs = []
+    for basedir in basedirs:
+        for root, dirnames, _ in os.walk(basedir or '.'):
+            if len(dirnames) == 0:
+                scanned_dirs.append([os.path.realpath(root), '*'])
+
+    print_msg("scanned %s, found %d dirs" % (basedirs, len(scanned_dirs)))
+    find_and_update_cache(basedirs[0], scanned_dirs)
+
+def parse_cache(fp):
+    return dict([(x[1].strip(),x[0]) for x in (line.split('++') for line in fp.readlines())])
+
+def read_cache(basedir='.'):
+    cache_path = find_cache(basedir)
+    if cache_path:
+        with open(cache_path, "r") as f:
+            return parse_cache(f)
+    return {}
+
+def init_cache():
+    cache_path = os.path.join(os.path.realpath("."), CACHE_FILE)
+    if os.path.exists(cache_path) and os.path.isdir(cache_path):
+       print_err("path: %s is a dir, file expected" % cache_path)
+       return
+    if not os.path.exists(cache_path):
+        with open(cache_path, "w") as f:
+            None
+
+def discover_caches(basedirs):
+    cache_files = []
+    for basedir in basedirs:
+        cache_file = find_cache(basedir)
+        if cache_file:
+            cache_files.append(cache_file)
+    print_msg("scanned %s, found dir_caches: %s" % (basedirs, cache_files))
+
+def propose_dirs(prefixes):
+    cache = read_cache()
+    for prefix in prefixes:
+        for (cached_dir, alias) in cache.items():
+            if not (alias == '*' and cached_dir.find(prefix)>-1 or alias != '*' and alias.find(prefix)>-1):
+                del cache[cached_dir]
+    res = cache.keys()
+    res.extend([val for val in cache.values() if val != '*'])
+    return res
+
+def complete_basename(prefixes):
+    dirs = propose_dirs(prefixes)
+    if len(dirs) > 0 and len(prefixes)>0:
+        prefix = prefixes[-1]
+        basenames = list(set([basename for dirname in dirs for basename in dirname.split(os.path.sep) if basename.find(prefix)>-1]))
+        print " ".join(basenames)
+
+def process_controll(argv):
+    if len(argv) == 0:
+        print_help()
+    else:
+        if argv[0] == 'scan':
+            scan_dir(argv[1:] or ['.'])
+        elif argv[0] == 'init':
+            init_cache()
+        elif argv[0] == 'discover':
+            discover_caches(argv[1:] or ['.'])
+        elif argv[0] == 'complete':
+            complete_basename(argv[1:])
+        elif argv[0] == 'add':
+            if len(argv) == 1:
+                print "%"
+                print "missing directory alias"
+            else:
+                print "add to cdgrc"
+        else:
+            print_help()
+
+#print "dirjumper %s" % sys.argv
+
+if len(sys.argv) > 2 and sys.argv[1] == '-':
+    process_controll(sys.argv[2:])
+elif len(sys.argv) > 1:
+    print " ".join(propose_dirs(sys.argv[1:]))
+
