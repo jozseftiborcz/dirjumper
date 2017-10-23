@@ -67,7 +67,7 @@ def scan_dir(basedirs):
 
     def scanner(root):
         for subdir in subdirs(root):
-            if not os.path.basename(subdir).startswith('.') or IGNORE_HIDDEN_FILES != 'yes':
+            if (not os.path.basename(subdir).startswith('.') or IGNORE_HIDDEN_FILES != 'yes') and not os.path.islink(subdir):
                 scanned_dirs.append([subdir, '*'])
                 scanner(os.path.realpath(subdir))
 
