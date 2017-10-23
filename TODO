@@ -1,4 +1,3 @@
 - add help to dirjumper
 - only the first n candidate is shown if there is no exact match and show every candidate only with ? as last prefix
 - add alias handling
-- add ~/.dirjumper to cache search path as the last step

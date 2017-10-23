@@ -15,14 +15,16 @@ def print_err(msg):
 def print_help():
     print_msg("help")
 
-def find_cache(basedir):
+def find_cache(basedir, home_search=False):
     basedir = os.path.realpath(basedir)
 
     cache_path = os.path.join(basedir, CACHE_FILE)
     if os.path.exists(cache_path) and os.path.isfile(cache_path):
         return cache_path
     elif basedir != '/':
-        return find_cache(os.path.dirname(basedir))
+        return find_cache(os.path.dirname(basedir), home_search)
+    elif not home_search:
+        return find_cache(os.path.join(os.path.expanduser("~"), CACHE_FILE), True)
     return None
 
 def update_cache(cache_path, data):
@@ -50,13 +52,13 @@ def find_and_update_cache(basedir, scanned_dirs):
 def scan_dir(basedirs):
     scanned_dirs = []
 
-    def subdirs(dir):
+    def subdirs(sdir):
         subd = []
         try:
-            for f in os.listdir(dir):
+            for f in os.listdir(sdir):
                 try:
-                    if os.path.isdir(os.path.join(dir,f)):
-                        subd.append(os.path.join(dir,f))
+                    if os.path.isdir(os.path.join(sdir,f)):
+                        subd.append(os.path.join(sdir,f))
                 except: # ignore access right problems
                     None
         except: # detto
@@ -70,6 +72,7 @@ def scan_dir(basedirs):
                 scanner(os.path.realpath(subdir))
 
     for basedir in basedirs:
+        scanned_dirs.append([basedir, '*'])
         scanner(os.path.realpath(basedir))
 
     print_msg("scanned %s, found %d dirs" % (basedirs, len(scanned_dirs)))
