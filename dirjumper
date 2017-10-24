@@ -108,7 +108,7 @@ def discover_caches(basedirs):
 def propose_dirs(prefixes):
     cache = read_cache()
     for prefix in prefixes:
-        if prefix == '-': # ignore other prefixes and consider the sortest so far
+        if prefix == '?':
             break
         for (cached_dir, alias) in cache.items():
             if not (alias == '*' and cached_dir.find(os.path.sep+prefix)>-1 or alias != '*' and alias.startswith(prefix)): #TODO only with the first prefix
@@ -117,7 +117,7 @@ def propose_dirs(prefixes):
     res.extend([val for val in cache.values() if val != '*']) 
     res.sort()
     res.sort(key=len)
-    if prefix == '-':
+    if prefixes[-1] != '?':
         return res[0:1]
     return res
 
