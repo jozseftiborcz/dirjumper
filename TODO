@@ -1,3 +1,6 @@
 - add help to dirjumper
 - only the first n candidate is shown if there is no exact match and show every candidate only with ? as last prefix
 - add alias handling
+- have option to search for cache in parent directories too. Defalt is only in the first one. Maybe with @
+- fix: for a/a/ directory dj a a doesnt work
+- refactor dirjumper interface: no default option. 
