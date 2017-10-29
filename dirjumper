@@ -117,12 +117,12 @@ def init_cache():
             None
 
 def discover_caches(basedirs):
-    cache_files = []
+    cache_files = set()
     for basedir in basedirs:
         cache_file = find_cache(basedir)
         if cache_file:
-            cache_files.append(cache_file)
-    print_msg("scanned %s, found dir_caches: %s" % (basedirs, cache_files))
+            cache_files.add(cache_file)
+    print_msg("scanned %s, found dir_caches: %s" % (basedirs, list(cache_files)))
 
 def match_prefix(alias, cached_dir, prefix):
     if prefix[-1] == ':': # inline search 
