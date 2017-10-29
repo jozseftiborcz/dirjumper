@@ -21,11 +21,11 @@ Python 2
 ## Usage
 
 It provider three commands: 
-* ''dj'' to replace command ''cd'' 
-* ''ldj'' to replace command ''ls `dj...'' 
-* ''lldj'' to replace command ''ls -lat `dj...'' 
+* '''dj''' to replace command '''cd''' 
+* '''ldj''' to replace command '''ls `dj...''' 
+* '''lldj''' to replace command '''ls -lat `dj...''' 
 
-Where ''dj...'' means the same parametrisation as ''dj''.
+Where '''dj...''' means the same parametrisation as '''dj'''.
 
 All of these are commands rely on ''dirjumper''. They call dirjumper with ''dirjumper propose <params>''.
 
@@ -45,6 +45,7 @@ possible commands:
                             possible paths matching prefixes
 
 Prefix match algorithm:
+
 * ? is a special prefix which means: return the shortest matching path
 * if prefix ends with double colon than prefix should match a part of path, otherwise prefix should match to the 
   beginning of a dirname of the path
