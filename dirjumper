@@ -13,7 +13,26 @@ def print_err(msg):
     print "%e:"+msg
 
 def print_help():
-    print_msg("help")
+    print_msg("""
+dirjumper command <optional parameters>
+
+possible commands:
+    init                    Initiates .dirjumper file in the current directory
+    discover <path>*        Finds and displays .dirjumper cache files starting from the 
+                            given directories or the current one if nothing is given up to the root.
+    scan <path>*            Adds given directories or the current one if nothing is given to the first cache found.
+                            If no cache is found, gives an error.
+    complete <prefixes>+    Searches accessible caches from the current directory (see discover) and display
+                            possible dirnames matching prefixes
+    propose <prefixes>+     Searches accessible caches from the current directory (see discover) and returns
+                            possible paths matching prefixes
+
+Prefix match algorithm:
+* ? is a special prefix which means: return the shortest matching path
+* if prefix ends with double colon than prefix should match a part of path, otherwise prefix should match to the 
+  beginning of a dirname of the path
+* if more prefix is given, consecutive prefixes should match the path starting from the last match's subdirectory.
+""")
 
 def find_cache(basedir, home_search=False):
     basedir = os.path.realpath(basedir)
@@ -112,7 +131,7 @@ def match_prefix(alias, cached_dir, prefix):
         return alias == '*' and cached_dir.find(os.path.sep+prefix)>-1 or alias != '*' and alias.startswith(prefix)
 
 def get_match_postfix(cached_dir, prefix):
-    return re.sub('.*'+os.path.sep + ('[^'+os.path.sep+']*' + prefix[:-1] if prefix[-1] == ':' else prefix) +'.*?'+os.path.sep+'?', os.path.sep, cached_dir)
+    return re.sub('.*?'+os.path.sep + ('[^'+os.path.sep+']*' + prefix[:-1] if prefix[-1] == ':' else prefix) +'.*?'+os.path.sep+'?', os.path.sep, cached_dir, count=1)
 
 def propose_dirs(prefixes):
     cache = read_cache()
@@ -124,6 +143,7 @@ def propose_dirs(prefixes):
                 break
             if match_prefix(alias, dir2match, prefix):
                 dir2match = get_match_postfix(dir2match, prefix)
+                #print(cached_dir,dir2match)
             else:
                 dir2match = None 
                 break
@@ -131,11 +151,13 @@ def propose_dirs(prefixes):
             proposals.append(cached_dir)
             if alias != '*':
                 proposals.append(alias)
+    
     proposals.sort()
     proposals.sort(key=len)
     if prefixes[-1] != '?':
-        return proposals[0:1]
-    return proposals
+        print(" ".join(proposals[0:1]))
+    else:
+        print(" ".join(proposals))
 
 def complete_basename(prefixes):
     cache = read_cache()
@@ -163,12 +185,10 @@ def process_controll(argv):
             discover_caches(argv[1:] or [os.path.realpath('.')])
         elif argv[0] == 'complete':
             complete_basename(argv[1:])
-        elif argv[0] == 'add':
-            if len(argv) == 1:
-                print "%"
-                print "missing directory alias"
-            else:
-                print "add to cdgrc"
+        elif argv[0] == 'propose':
+            propose_dirs(argv[1:])
+        elif argv[0] == 'alias':
+            print_msg("missing implementation")
         else:
             print_help()
 
@@ -176,8 +196,5 @@ def process_controll(argv):
 
 IGNORE_HIDDEN_FILES = os.environ.get('DIRJUMPER_IGNORE_HIDDEN_FILES') or 'yes'
 
-if len(sys.argv) > 2 and sys.argv[1] == '-':
-    process_controll(sys.argv[2:])
-elif len(sys.argv) > 1:
-    print " ".join(propose_dirs(sys.argv[1:]))
+process_controll(sys.argv[1:])
 
