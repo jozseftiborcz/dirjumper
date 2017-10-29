@@ -20,17 +20,36 @@ Python 2
 
 ## Usage
 
-There are two commands: ''dj'' to replace command ''cd'' and ''dirjumper'' to manage dirjumper cache. dirjumper is also used by dj. dirjumper commands has the following format
+It provider three commands: 
+* ''dj'' to replace command ''cd'' 
+* ''ldj'' to replace command ''ls `dj...'' 
+* ''lldj'' to replace command ''ls -lat `dj...'' 
+
+Where ''dj...'' means the same parametrisation as ''dj''.
+
+All of these are commands rely on ''dirjumper''. They call dirjumper with ''dirjumper propose <params>''.
+
 ```
-dirjumper - <command name> <optional parameters+>
+dirjumper <command name> <optional parameters>*
 ```
 
-Commands are:
-init: initialize .dirjumper cache in the current directory
-discover: list available caches from the current directory up to root. If no cache is found it will try ~/.dirjumper too.
-scan: add subdirectories to the closest cache
-complete: propose directory base name candidates based on prefixes (eg. dirjumper - complete var log 
-default: print help
+possible commands:
+    init                    Initiates .dirjumper file in the current directory
+    discover <path>*        Finds and displays .dirjumper cache files starting from the 
+                            given directories or the current one if nothing is given up to the root.
+    scan <path>*            Adds given directories or the current one if nothing is given to the first cache found.
+                            If no cache is found, gives an error.
+    complete <prefixes>+    Searches accessible caches from the current directory (see discover) and display
+                            possible dirnames matching prefixes
+    propose <prefixes>+     Searches accessible caches from the current directory (see discover) and returns
+                            possible paths matching prefixes
+
+Prefix match algorithm:
+* ? is a special prefix which means: return the shortest matching path
+* if prefix ends with double colon than prefix should match a part of path, otherwise prefix should match to the 
+  beginning of a dirname of the path
+* if more prefix is given, consecutive prefixes should match the path starting from the last match's subdirectory.
+
 
 To start using dirjumper you should initialize dirjumper cache file with command
 ```
