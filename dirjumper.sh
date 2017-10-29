@@ -1,10 +1,10 @@
 function _dirjumper() {
-    res=`dirjumper - complete ${COMP_WORDS[@]:1}`
+    res=`dirjumper complete ${COMP_WORDS[@]:1}`
     COMPREPLY=( $res )
 }
 
 function dj() {
-    res=( `dirjumper ${@:1}` )
+    res=( `dirjumper propose ${@:1}` )
     if [ ${#res[@]} -gt 1 ]; then
         echo "-->${res[@]}"
     else
@@ -13,7 +13,7 @@ function dj() {
 }
 
 function ldj() {
-    res=( `dirjumper ${@:1}` )
+    res=( `dirjumper propose ${@:1}` )
     if [ ${#res[@]} -gt 1 ]; then
         echo "-->${res[@]}"
     else
@@ -22,7 +22,7 @@ function ldj() {
 }
 
 function lldj() {
-    res=( `dirjumper ${@:1}` )
+    res=( `dirjumper propose ${@:1}` )
     if [ ${#res[@]} -gt 1 ]; then
         echo "-->${res[@]}"
     else
