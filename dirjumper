@@ -105,29 +105,45 @@ def discover_caches(basedirs):
             cache_files.append(cache_file)
     print_msg("scanned %s, found dir_caches: %s" % (basedirs, cache_files))
 
+def match_prefix(alias, cached_dir, prefix):
+    if prefix[-1] == ':': # inline search 
+        return alias == '*' and cached_dir.find(prefix[:-1])>-1 or alias != '*' and alias.find(prefix[:-1])>-1
+    else: # only from the begining
+        return alias == '*' and cached_dir.find(os.path.sep+prefix)>-1 or alias != '*' and alias.startswith(prefix)
+
+def get_match_postfix(cached_dir, prefix):
+    return re.sub('.*'+os.path.sep + ('[^'+os.path.sep+']*' + prefix[:-1] if prefix[-1] == ':' else prefix) +'.*?'+os.path.sep+'?', os.path.sep, cached_dir)
+
 def propose_dirs(prefixes):
     cache = read_cache()
-    for prefix in prefixes:
-        if prefix == '?':
-            break
-        for (cached_dir, alias) in cache.items():
-            if not (alias == '*' and cached_dir.find(os.path.sep+prefix)>-1 or alias != '*' and alias.startswith(prefix)): #TODO only with the first prefix
-                del cache[cached_dir]
-    res = cache.keys()
-    res.extend([val for val in cache.values() if val != '*']) 
-    res.sort()
-    res.sort(key=len)
+    proposals = []
+    for (cached_dir, alias) in cache.items():
+        dir2match = cached_dir
+        for prefix in prefixes:
+            if prefix == '?':
+                break
+            if match_prefix(alias, dir2match, prefix):
+                dir2match = get_match_postfix(dir2match, prefix)
+            else:
+                dir2match = None 
+                break
+        if dir2match:
+            proposals.append(cached_dir)
+            if alias != '*':
+                proposals.append(alias)
+    proposals.sort()
+    proposals.sort(key=len)
     if prefixes[-1] != '?':
-        return res[0:1]
-    return res
+        return proposals[0:1]
+    return proposals
 
 def complete_basename(prefixes):
     cache = read_cache()
     for prefix in prefixes:
         for (cached_dir, alias) in cache.items():
             del cache[cached_dir]
-            if alias == '*' and cached_dir.find(os.path.sep+prefix) > -1 or alias != '*' and alias.startswith(prefix): #consider only subdirs
-                cache[re.sub('.*'+os.path.sep+prefix+'.*?'+os.path.sep, os.path.sep, cached_dir)] = alias
+            if match_prefix(alias, cached_dir, prefix): #consider only subdirs
+                cache[re.sub('.*'+os.path.sep + ('[^'+os.path.sep+']*' if prefix[-1] == ':' else '') +prefix+'.*?'+os.path.sep, os.path.sep, cached_dir)] = alias
     dirs = cache.keys()
 
     if len(dirs) > 0 and len(prefixes)>0:
