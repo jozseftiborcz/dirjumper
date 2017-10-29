@@ -36,11 +36,13 @@ dirjumper <command name> <optional parameters>*
 
 possible commands:
 
-init|Initiates .dirjumper file in the current directory
-discover <path>*|Finds and displays .dirjumper cache files starting from the given directories or the current one if nothing is given up to the root.
-scan <path>*|Adds given directories or the current one if nothing is given to the first cache found.  If no cache is found, gives an error.
-complete <prefixes>+|Searches accessible caches from the current directory (see discover) and display possible dirnames matching prefixes
-propose <prefixes>+|Searches accessible caches from the current directory (see discover) and returns possible paths matching prefixes
+| *command* | *description* |
+|:------------- |:------------- |
+| `init` | Initiates .dirjumper file in the current directory |
+| `discover <path>*` | Finds and displays .dirjumper cache files starting from the given directories or <br>the current one if nothing is given up to the root. |
+| `scan <path>*` | Adds given directories or the current one if nothing is given to the first cache found. <br> If no cache is found, gives an error. |
+| `complete <prefixes>+` | Searches accessible caches from the current directory (see discover) <br>and display possible dirnames matching prefixes |
+| `propose <prefixes>+` | Searches accessible caches from the current directory (see discover) <br>and returns possible paths matching prefixes |
 
 
 Prefix match algorithm:
