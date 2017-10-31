@@ -3,31 +3,29 @@ function _dirjumper() {
     COMPREPLY=( $res )
 }
 
-function dj() {
-    res=( `dirjumper propose ${@:1}` )
+function __dj() {
+    res=( `dirjumper propose ${@:2}` )
     if [ ${#res[@]} -gt 1 ]; then
         echo "-->${res[@]}"
     else
-        cd ${res[0]}
+        if [ "$res" = "" ]; then
+            echo "no matching path"
+        else
+            eval $1 ${res[0]}
+        fi
     fi
+}
+
+function dj() {
+    __dj 'cd' ${@:1}
 }
 
 function ldj() {
-    res=( `dirjumper propose ${@:1}` )
-    if [ ${#res[@]} -gt 1 ]; then
-        echo "-->${res[@]}"
-    else
-        ls ${res[0]}
-    fi
+    __dj 'ls' ${@:1}
 }
 
 function lldj() {
-    res=( `dirjumper propose ${@:1}` )
-    if [ ${#res[@]} -gt 1 ]; then
-        echo "-->${res[@]}"
-    else
-        ls -lat ${res[0]}
-    fi
+    __dj 'ls -lat' ${@:1}
 }
 
 complete -F _dirjumper dj
